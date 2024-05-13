@@ -74,8 +74,19 @@ class ModuleCommand extends Command
         $path = "./Modules/$name";
         $t_path = "./Trash/$name/$trx";
         mkdir($t_path, 0755, 1);
-        exec('mv ' . $path . "/* " . $t_path);
-        exec('rm -rf ' . $path);
+
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            // Команды для Windows
+            $commandMove = 'move /Y "' . $path . '\*" "' . $t_path . '"';
+            $commandRemove = 'rd /s /q "' . $path . '"';
+        } else {
+            // Команды для Unix/Linux и macOS
+            $commandMove = 'mv ' . $path . "/* " . $t_path;
+            $commandRemove = 'rm -rf ' . $path;
+        }
+
+        exec($commandMove);
+        exec($commandRemove);
 
         $process = new Process(['git', 'clone', $this->findModuleUrl($name), $path]);
         $process->setWorkingDirectory(base_path());
