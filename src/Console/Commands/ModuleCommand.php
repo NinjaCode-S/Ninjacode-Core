@@ -2,14 +2,17 @@
 
 namespace Ninjacode\Core\Console\Commands;
 
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Symfony\Component\Process\Process;
-use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\form;
 
 class ModuleCommand extends Command
 {
     protected $signature = 'ninja:module {action} {name?}';
     protected $description = 'Install and update modules';
+
+    private $ninjamodule = '.ninjamodule';
 
     public function handle()
     {
@@ -47,46 +50,39 @@ class ModuleCommand extends Command
     private function installModule($name, $folder)
     {
         $this->info('Installing: ' . $name);
-        $process = new Process(['git', 'clone', $this->genUrl($name), "./Modules/$folder"]);
+
+        $path = "./Modules/$folder";
+        $process = new Process(['git', 'clone', $this->genUrl($name), $path]);
         $process->setWorkingDirectory(base_path());
         $process->run();
 
-        if ($process->isSuccessful() && is_dir("./Modules/$folder")) {
+        if ($process->isSuccessful() && is_dir($path)) {
             \Artisan::call("module:enable $folder");
             $this->info($process->getOutput());
             $this->saveDotNinja($this->genUrl($name), $folder);
 
-            $this->renameGitDirectory($folder);
+            $this->removeGit($path);
             exec('composer dump-autoload');
         } else {
             $this->error("Failed to install $folder");
         }
-
-
     }
 
     private function updateModule($name)
     {
-        if (!$name) {
-            $modules = glob(base_path('Modules/*'), GLOB_ONLYDIR);
-            foreach ($modules as $module) {
-                $this->updateModule(basename($module));
-            }
-            return;
-        }
+        $trx = Carbon::now()->format('Y-m-d___H-i');
+        $path = "./Modules/$name";
+        $t_path = "./Trash/$name/$trx";
+        mkdir($t_path, 0755, 1);
+        exec('mv ' . $path . "/* " . $t_path);
+        exec('rm -rf ' . $path);
 
-        $this->info('Updating: ' . $name);
-
-        $this->renameGitDirectory($name);
-        $process = new Process(['git', 'pull'], base_path("Modules/$name"));
+        $process = new Process(['git', 'clone', $this->findModuleUrl($name), $path]);
+        $process->setWorkingDirectory(base_path());
         $process->run();
 
-        if (!$process->isSuccessful()) {
-            $this->error("Failed to update $name: " . $process->getErrorOutput());
-        } else {
-            $this->info($process->getOutput());
-        }
-        $this->renameGitDirectory($name);
+        $this->removeGit($path);
+        exec('composer dump-autoload');
     }
 
     private function pushModule($name)
@@ -101,7 +97,6 @@ class ModuleCommand extends Command
 
         $this->info('Pushing: ' . $name);
 
-        $this->renameGitDirectory($name);
         $process = new Process(['git', 'add', '.'], base_path("Modules/$name"));
         $process->run();
         $process = new Process(['git', 'commit', '-m "update module"'], base_path("Modules/$name"));
@@ -114,7 +109,6 @@ class ModuleCommand extends Command
         } else {
             $this->info($process->getOutput());
         }
-        $this->renameGitDirectory($name);
     }
 
     private function disableModule($folder)
@@ -149,16 +143,12 @@ class ModuleCommand extends Command
 
     private function saveDotNinja($gitUrl, $repoName)
     {
-        $filePath = '.ninjamodule';
         $lineToWrite = $repoName . " " . $gitUrl . PHP_EOL;
 
-        // Проверяем, существует ли файл
-        if (file_exists($filePath)) {
-            // Читаем все строки из файла
-            $lines = file($filePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if (file_exists($this->ninjamodule)) {
+            $lines = file($this->ninjamodule, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             $found = false;
 
-            // Перебираем строки, ищем нужную репозиторию
             foreach ($lines as &$line) {
                 if (strpos($line, $repoName) === 0) {
                     // Если нашли, обновляем строку
@@ -168,40 +158,37 @@ class ModuleCommand extends Command
                 }
             }
 
-            // Если репозитория нет в файле, добавляем её
             if (!$found) {
                 $lines[] = $lineToWrite;
             }
 
-            // Записываем обновлённые данные обратно в файл
-            file_put_contents($filePath, implode(PHP_EOL, $lines) . PHP_EOL);
+            file_put_contents($this->ninjamodule, implode(PHP_EOL, $lines) . PHP_EOL);
         } else {
-            // Файл не существует, просто пишем строку
-            file_put_contents($filePath, $lineToWrite);
+            file_put_contents($this->ninjamodule, $lineToWrite);
         }
     }
 
-    private function renameGitDirectory($modulePath)
+    private function findModuleUrl($moduleName)
     {
-        $originalDir = './Modules/' . $modulePath . '/.git';
-        $newDirPath = './Modules/' . $modulePath . '/.ninja_git';
+        if (file_exists($this->ninjamodule)) {
+            $lines = file($this->ninjamodule, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 
-        if (file_exists($originalDir)) {
-            if (rename($originalDir, $newDirPath)) {
-                $this->info("Renamed .git to .ninja_git successfully.");
-            } else {
-                $this->error("Failed to rename .git to .ninja_git.");
+            foreach ($lines as $line) {
+                if (strpos($line, $moduleName) === 0) {
+                    $parts = explode(' ', $line, 2);
+                    if (count($parts) === 2) {
+                        return $parts[1];
+                    }
+                }
             }
-        } elseif (file_exists($newDirPath)) {
-            if (rename($newDirPath, $originalDir)) {
-                $this->info("Renamed .ninja_git to .git successfully.");
-            } else {
-                $this->error("Failed to rename .ninja_git to .git.");
-            }
-        } else {
-            $this->error("Directory does not exist.");
         }
+        return null;
+    }
 
+    private function removeGit($modulePath)
+    {
+        $dir = $modulePath . '/.git';
+        exec('rm -rf ' . $dir);
     }
 
 }

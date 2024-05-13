@@ -19,6 +19,10 @@
         "nwidart/laravel-modules": "^11.0",
         "livewire/livewire": "^3.4"
     },
+    "scripts": {
+        "post-update-cmd": "Ninjacode\\Core\\ComposerScripts::postUpdate",
+        "post-install-cmd": "Ninjacode\\Core\\ComposerScripts::postUpdate"
+    },
     "extra": {
         "laravel": {
             "providers": [
