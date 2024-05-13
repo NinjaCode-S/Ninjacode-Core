@@ -25,5 +25,10 @@
                 "Ninjacode\\Core\\Providers\\NinjaCoreServiceProvider"
             ]
         }
+    },
+    "config": {
+        "allow-plugins": {
+            "wikimedia/composer-merge-plugin": true
+        }
     }
 }

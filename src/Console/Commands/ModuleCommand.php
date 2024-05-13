@@ -54,12 +54,15 @@ class ModuleCommand extends Command
         if ($process->isSuccessful() && is_dir("./Modules/$folder")) {
             \Artisan::call("module:enable $folder");
             $this->info($process->getOutput());
+            $this->saveDotNinja($this->genUrl($name), $folder);
+
+            $this->renameGitDirectory($folder);
+            exec('composer dump-autoload');
         } else {
             $this->error("Failed to install $folder");
         }
-        $this->saveDotNinja($this->genUrl($name), $folder);
-        $this->renameGitDirectory($folder);
-        exec('composer dump-autoload');
+
+
     }
 
     private function updateModule($name)
@@ -183,13 +186,22 @@ class ModuleCommand extends Command
         $originalDir = './Modules/' . $modulePath . '/.git';
         $newDirPath = './Modules/' . $modulePath . '/.ninja_git';
 
-        if (is_dir($originalDir)) {
-            exec("mv $originalDir $newDirPath");
-            $this->info("Renamed .git to .ninja_git successfully.");
+        if (file_exists($originalDir)) {
+            if (rename($originalDir, $newDirPath)) {
+                $this->info("Renamed .git to .ninja_git successfully.");
+            } else {
+                $this->error("Failed to rename .git to .ninja_git.");
+            }
+        } elseif (file_exists($newDirPath)) {
+            if (rename($newDirPath, $originalDir)) {
+                $this->info("Renamed .ninja_git to .git successfully.");
+            } else {
+                $this->error("Failed to rename .ninja_git to .git.");
+            }
         } else {
-            exec("mv $newDirPath $originalDir");
-            $this->info("Renamed .ninja_git to .git successfully.");
+            $this->error("Directory does not exist.");
         }
+
     }
 
 }
