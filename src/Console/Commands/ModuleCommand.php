@@ -70,6 +70,14 @@ class ModuleCommand extends Command
 
     private function updateModule($name)
     {
+        if (!$name) {
+            $modules = glob(base_path('Modules/*'), GLOB_ONLYDIR);
+            foreach ($modules as $module) {
+                $this->updateModule(basename($module));
+            }
+            return;
+        }
+
         $trx = Carbon::now()->format('Y-m-d___H-i');
         $path = "./Modules/$name";
         $t_path = "./Trash/$name/$trx";
@@ -89,6 +97,7 @@ class ModuleCommand extends Command
         exec($commandRemove);
 
         $process = new Process(['git', 'clone', $this->findModuleUrl($name), $path]);
+
         $process->setWorkingDirectory(base_path());
         $process->run();
 
@@ -198,8 +207,10 @@ class ModuleCommand extends Command
 
     private function removeGit($modulePath)
     {
-        $dir = $modulePath . '/.git';
-        exec('rm -rf ' . $dir);
+        if (!env('MODULES_ENV')) {
+            $dir = $modulePath . '/.git';
+            exec('rm -rf ' . $dir);
+        }
     }
 
 }
