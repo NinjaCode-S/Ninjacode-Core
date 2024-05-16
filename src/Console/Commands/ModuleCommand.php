@@ -4,6 +4,7 @@ namespace Ninjacode\Core\Console\Commands;
 
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Artisan;
 use Symfony\Component\Process\Process;
 use function Laravel\Prompts\form;
 
@@ -63,6 +64,7 @@ class ModuleCommand extends Command
 
             $this->removeGit($path);
             exec('composer dump-autoload');
+            Artisan::call('optimize:clear');
         } else {
             $this->error("Failed to install $folder");
         }
@@ -103,6 +105,7 @@ class ModuleCommand extends Command
 
         $this->removeGit($path);
         exec('composer dump-autoload');
+        Artisan::call('optimize:clear');
     }
 
     private function pushModule($name)
