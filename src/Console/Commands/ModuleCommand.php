@@ -82,7 +82,7 @@ class ModuleCommand extends Command
 
         $trx = Carbon::now()->format('Y-m-d___H-i');
         $path = "./Modules/$name";
-        $t_path = "./Trash/$name/$trx";
+        $t_path = "./Trash/$trx/$name";
         mkdir($t_path, 0755, 1);
 
         if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
@@ -113,7 +113,7 @@ class ModuleCommand extends Command
         if (!$name) {
             $modules = glob(base_path('Modules/*'), GLOB_ONLYDIR);
             foreach ($modules as $module) {
-                $this->updateModule(basename($module));
+                $this->pushModule(basename($module));
             }
             return;
         }
