@@ -73,17 +73,18 @@ class ModuleCommand extends Command
     private function updateModule($name)
     {
         if (!$name) {
-            $modules = glob(base_path('Modules/*'), GLOB_ONLYDIR);
+            $modules = $this->getModules();
             foreach ($modules as $module) {
                 $this->updateModule(basename($module));
             }
             return;
         }
 
-        $trx = Carbon::now()->format('Y-m-d___H-i');
+        $this->info('Updating: ' . $name);
+        $trx = Carbon::now()->format('Y-m-d___H-i-s');
         $path = "./Modules/$name";
         $t_path = "./Trash/$trx/$name";
-        mkdir($t_path, 0755, 1);
+        if (!is_dir($t_path)) mkdir($t_path, 0755, 1);
 
         if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
             // Команды для Windows
@@ -111,7 +112,7 @@ class ModuleCommand extends Command
     private function pushModule($name)
     {
         if (!$name) {
-            $modules = glob(base_path('Modules/*'), GLOB_ONLYDIR);
+            $modules = $this->getModules();
             foreach ($modules as $module) {
                 $this->pushModule(basename($module));
             }
@@ -206,6 +207,12 @@ class ModuleCommand extends Command
             }
         }
         return null;
+    }
+
+    private function getModules()
+    {
+        $lines = file($this->ninjamodule, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        return array_map(fn($item) => current(explode(' h', $item)), $lines);
     }
 
     private function removeGit($modulePath)
