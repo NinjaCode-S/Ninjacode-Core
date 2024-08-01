@@ -10,14 +10,17 @@
     "authors": [
         {
             "name": "Andrew Kolev",
-            "email": "alteraweb53@gmail.com"
+            "email": "a.kolev@jcubegroup.com"
         }
     ],
     "require": {
         "php": "^8.2",
-        "mhmiton/laravel-modules-livewire": "*",
+        "laravel/ui": "^4.2",
         "nwidart/laravel-modules": "^11.0",
-        "livewire/livewire": "^3.4"
+        "livewire/livewire": "^v3.5.2",
+        "spatie/laravel-permission": "^6.0",
+        "spatie/laravel-query-builder": "^5.6",
+        "laravel/prompts": "^0.1.24"
     },
     "extra": {
         "laravel": {

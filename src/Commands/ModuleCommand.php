@@ -1,16 +1,16 @@
 <?php
 
-namespace Ninjacode\Core\Console\Commands;
+namespace Ninjacode\Core\Commands;
 
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Symfony\Component\Process\Process;
-use function Laravel\Prompts\form;
+use function Laravel\Prompts\multiselect;
 
 class ModuleCommand extends Command
 {
-    protected $signature = 'ninja:module {action} {name?}';
+    protected $signature = 'module:git {action} {name?}';
     protected $description = 'Install and update modules';
 
     private $ninjamodule = '.ninjamodule';
@@ -73,7 +73,7 @@ class ModuleCommand extends Command
     private function updateModule($name)
     {
         if (!$name) {
-            $modules = $this->getModules();
+            $modules = multiselect(label: 'Which module would you like to update?', options: $this->getModules());
             foreach ($modules as $module) {
                 $this->updateModule(basename($module));
             }
@@ -112,7 +112,7 @@ class ModuleCommand extends Command
     private function pushModule($name)
     {
         if (!$name) {
-            $modules = $this->getModules();
+            $modules = multiselect(label: 'Which module would you like to update?', options: $this->getModules());
             foreach ($modules as $module) {
                 $this->pushModule(basename($module));
             }
@@ -211,6 +211,7 @@ class ModuleCommand extends Command
 
     private function getModules()
     {
+        if(!file_exists($this->ninjamodule)) return [];
         $lines = file($this->ninjamodule, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         return array_map(fn($item) => current(explode(' h', $item)), $lines);
     }
