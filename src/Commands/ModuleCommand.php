@@ -7,6 +7,8 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Symfony\Component\Process\Process;
 use function Laravel\Prompts\multiselect;
+use function Laravel\Prompts\select;
+use function Laravel\Prompts\text;
 
 class ModuleCommand extends Command
 {
@@ -40,7 +42,7 @@ class ModuleCommand extends Command
                 break;
             case "push":
             case "p":
-                $this->pushModule($folder);
+                $this->pushModule($folder, text('Comment'));
                 break;
             default:
                 $this->error("Unknown command: " . $action);
@@ -109,13 +111,11 @@ class ModuleCommand extends Command
         Artisan::call('optimize:clear');
     }
 
-    private function pushModule($name)
+    private function pushModule($name, $comment)
     {
         if (!$name) {
-            $modules = multiselect(label: 'Which module would you like to update?', options: $this->getModules());
-            foreach ($modules as $module) {
-                $this->pushModule(basename($module));
-            }
+            $module = select(label: 'Which module would you like to update?', options: $this->getModules());
+            $this->pushModule(basename($module), $comment);
             return;
         }
 
@@ -123,7 +123,7 @@ class ModuleCommand extends Command
 
         $process = new Process(['git', 'add', '.'], base_path("Modules/$name"));
         $process->run();
-        $process = new Process(['git', 'commit', '-m "update module"'], base_path("Modules/$name"));
+        $process = new Process(['git', 'commit', '-m "'.$comment.'"'], base_path("Modules/$name"));
         $process->run();
         $process = new Process(['git', 'push'], base_path("Modules/$name"));
         $process->run();
