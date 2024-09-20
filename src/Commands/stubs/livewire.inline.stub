@@ -7,11 +7,11 @@ use Livewire\Component;
 class [class] extends Component
 {
     public function render()
-{
-    return <<<'blade'
-            <div>
-                <h3>[quote]</h3>
-            </div>
-        blade;
-}
+    {
+        return <<<'blade'
+                <div>
+                    <h3>[quote]</h3>
+                </div>
+            blade;
+    }
 }

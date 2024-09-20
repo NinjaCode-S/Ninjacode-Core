@@ -55,13 +55,15 @@ class ModuleCommand extends Command
         $this->info('Installing: ' . $name);
 
         $path = "./Modules/$folder";
-        $process = new Process(['git', 'clone', $this->genUrl($name), $path]);
-        $process->setWorkingDirectory(base_path());
-        $process->run();
+        $process1 = new Process(['git', 'clone', $this->genUrl($name), $path]);
+        $process1->setWorkingDirectory(base_path());
+        $process1->run();
 
-        if ($process->isSuccessful() && is_dir($path)) {
-            \Artisan::call("module:enable $folder");
-            $this->info($process->getOutput());
+        if ($process1->isSuccessful() && is_dir($path)) {
+            $process2 = new Process(['php', 'artisan', 'module:enable', $folder]);
+            $process2->run();
+            $this->info($process1->getOutput());
+            $this->info($process2->getOutput());
             $this->saveDotNinja($this->genUrl($name), $folder);
 
             $this->removeGit($path);
