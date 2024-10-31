@@ -9,10 +9,11 @@ class ClientInfo
      *
      * @return array
      */
-    public static function ipInfo()
+    public static function ipInfo($ip = null)
     {
-        $ip = getRealIP();
-
+        if ($ip == null) {
+            $ip = $_SERVER['REMOTE_ADDR'];
+        }
         $xml = @simplexml_load_file('http://www.geoplugin.net/xml.gp?ip='.$ip);
 
         $country = @$xml->geoplugin_countryName;
