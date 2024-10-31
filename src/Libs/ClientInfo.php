@@ -27,7 +27,7 @@ class ClientInfo
             $data['timezone'] = $xml->geoplugin_timezone ?? null;
             $data['currencyCode'] = $xml->geoplugin_currencyCode ?? null;
             $data['currencySymbol'] = $xml->geoplugin_currencySymbol_UTF8 ?? null;
-            $data['isEU'] = $xml->geoplugin_inEU ?? 0;
+            $data['inEU'] = $xml->geoplugin_inEU ?? 0;
             $data['ip'] = $ip;
             $data['time'] = date('Y-m-d h:i:s A');
         }
