@@ -14,24 +14,22 @@ class ClientInfo
         if ($ip == null) {
             $ip = $_SERVER['REMOTE_ADDR'];
         }
-        $xml = @simplexml_load_file('http://www.geoplugin.net/xml.gp?ip='.$ip);
+        $xml = json_decode(file_get_contents('http://www.geoplugin.net/json.gp?ip=' . $ip));
 
-        $country = @$xml->geoplugin_countryName;
-        $city = @$xml->geoplugin_city;
-        $area = @$xml->geoplugin_areaCode;
-        $code = @$xml->geoplugin_countryCode;
-        $long = @$xml->geoplugin_longitude;
-        $lat = @$xml->geoplugin_latitude;
-
-        $data['country'] = $country ?? [];
-        $data['city'] = $city ?? [];
-        $data['area'] = $area ?? [];
-        $data['code'] = $code ?? [];
-        $data['long'] = $long ?? [];
-        $data['lat'] = $lat ?? [];
-        $data['ip'] = $ip;
-        $data['time'] = date('Y-m-d h:i:s A');
-
+        if (isset($xml)) {
+            $data['continentName'] = $xml->geoplugin_continentName ?? null;
+            $data['country'] = $xml->geoplugin_countryName ?? null;
+            $data['city'] = $xml->geoplugin_city ?? null;
+            $data['area'] = $xml->geoplugin_areaCode ?? null;
+            $data['code'] = $xml->geoplugin_countryCode ?? null;
+            $data['long'] = $xml->geoplugin_longitude ?? null;
+            $data['lat'] = $xml->geoplugin_latitude ?? null;
+            $data['timezone'] = $xml->geoplugin_timezone ?? null;
+            $data['currencyCode'] = $xml->geoplugin_currencyCode ?? null;
+            $data['currencySymbol'] = $xml->geoplugin_currencySymbol_UTF8 ?? null;
+            $data['ip'] = $ip;
+            $data['time'] = date('Y-m-d h:i:s A');
+        }
         return $data;
     }
 
