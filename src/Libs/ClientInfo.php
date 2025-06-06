@@ -39,7 +39,7 @@ class ClientInfo
      *
      * @return array
      */
-    public static function osBrowser()
+    public static function osBrowser($add_os = [], $add_browser = [])
     {
         $userAgent = $_SERVER['HTTP_USER_AGENT'];
         $osPlatform = 'Unknown OS Platform';
@@ -67,6 +67,7 @@ class ClientInfo
             '/android/i' => 'Android',
             '/blackberry/i' => 'BlackBerry',
             '/webos/i' => 'Mobile',
+            ...$add_os,
         ];
         foreach ($osArray as $regex => $value) {
             if (preg_match($regex, $userAgent)) {
@@ -85,6 +86,7 @@ class ClientInfo
             '/maxthon/i' => 'Maxthon',
             '/konqueror/i' => 'Konqueror',
             '/mobile/i' => 'Handheld Browser',
+            ...$add_browser,
         ];
         foreach ($browserArray as $regex => $value) {
             if (preg_match($regex, $userAgent)) {
